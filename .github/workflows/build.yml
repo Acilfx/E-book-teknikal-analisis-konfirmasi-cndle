@@ -1,0 +1,85 @@
+name: Build APK
+on: [push, workflow_dispatch]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: 8.7
+      - name: Susun proyek Android
+        run: |
+          mkdir -p P/app/src/main/assets/pages P/app/src/main/java/com/ebook/reader P/app/src/main/res/mipmap-xxxhdpi
+          cp index.html P/app/src/main/assets/
+          cp p*.jpg P/app/src/main/assets/pages/
+          cp icon.png P/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
+          cd P
+          cat > settings.gradle <<'X'
+          pluginManagement { repositories { google(); mavenCentral(); gradlePluginPortal() } }
+          dependencyResolutionManagement { repositories { google(); mavenCentral() } }
+          rootProject.name = "EBook3EMA"
+          include ':app'
+          X
+          cat > build.gradle <<'X'
+          plugins {
+              id 'com.android.application' version '8.5.2' apply false
+              id 'org.jetbrains.kotlin.android' version '1.9.24' apply false
+          }
+          X
+          echo "android.useAndroidX=true" > gradle.properties
+          cat > app/build.gradle <<'X'
+          plugins { id 'com.android.application'; id 'org.jetbrains.kotlin.android' }
+          android {
+              namespace 'com.ebook.reader'
+              compileSdk 34
+              defaultConfig { applicationId 'com.ebook.reader'; minSdk 21; targetSdk 34; versionCode 1; versionName '1.0' }
+              kotlinOptions { jvmTarget = '1.8' }
+          }
+          X
+          cat > app/src/main/AndroidManifest.xml <<'X'
+          <?xml version="1.0" encoding="utf-8"?>
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+              <application android:label="E-Book 3EMA" android:icon="@mipmap/ic_launcher" android:theme="@android:style/Theme.Material.NoActionBar">
+                  <activity android:name=".MainActivity" android:exported="true" android:configChanges="orientation|screenSize|keyboardHidden">
+                      <intent-filter>
+                          <action android:name="android.intent.action.MAIN"/>
+                          <category android:name="android.intent.category.LAUNCHER"/>
+                      </intent-filter>
+                  </activity>
+              </application>
+          </manifest>
+          X
+          cat > app/src/main/java/com/ebook/reader/MainActivity.kt <<'X'
+          package com.ebook.reader
+          import android.app.Activity
+          import android.graphics.Color
+          import android.os.Bundle
+          import android.webkit.WebView
+          class MainActivity : Activity() {
+              private lateinit var web: WebView
+              override fun onCreate(b: Bundle?) {
+                  super.onCreate(b)
+                  window.statusBarColor = Color.parseColor("#0F2250")
+                  web = WebView(this)
+                  web.setBackgroundColor(Color.parseColor("#0A193C"))
+                  web.settings.javaScriptEnabled = true
+                  web.settings.domStorageEnabled = true
+                  web.settings.builtInZoomControls = true
+                  web.settings.displayZoomControls = false
+                  setContentView(web)
+                  web.loadUrl("file:///android_asset/index.html")
+              }
+          }
+          X
+      - name: Build
+        run: cd P && gradle assembleDebug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ebook-apk
+          path: P/app/build/outputs/apk/debug/*.apk
