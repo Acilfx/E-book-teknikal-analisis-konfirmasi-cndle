@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="id"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>3EMA Expert E-Book</title>
+<style>
+:root{--bg:#0a193c;--bar:#0f2250;--gold:#c99b28;--tx:#fff;color-scheme:dark}
+*{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--bg);color:var(--tx);font-family:system-ui,sans-serif;overflow:hidden}
+header{height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 14px;background:var(--bar);border-bottom:2px solid var(--gold);padding-top:env(safe-area-inset-top,0)}
+header b{color:var(--gold);letter-spacing:.5px}
+button{background:none;border:1px solid var(--gold);color:var(--gold);border-radius:8px;padding:8px 12px;font-size:15px}
+#pager{height:calc(100% - 52px - 58px);display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none}
+#pager::-webkit-scrollbar{display:none}
+.s{flex:0 0 100%;scroll-snap-align:center;overflow:auto;display:flex;justify-content:center;align-items:flex-start;background:#fff}
+.s img{width:100%;max-width:900px;height:auto;display:block;touch-action:pan-x pan-y pinch-zoom}
+nav{position:fixed;bottom:0;left:0;right:0;height:58px;display:flex;align-items:center;justify-content:space-between;padding:0 14px env(safe-area-inset-bottom,0);background:var(--bar);border-top:2px solid var(--gold)}
+#grid{position:fixed;inset:52px 0 58px;background:var(--bg);overflow:auto;display:none;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px;padding:12px}
+#grid.on{display:grid}
+#grid div{border:2px solid transparent;border-radius:8px;overflow:hidden;background:#fff;aspect-ratio:3/4;position:relative}
+#grid div.cur{border-color:var(--gold)}
+#grid img{width:100%;height:100%;object-fit:cover;object-position:top}
+#grid span{position:absolute;bottom:0;right:0;background:var(--gold);color:#000;font-size:12px;padding:1px 6px}
+</style></head><body>
+<header><b>3EMA EXPERT</b><button id="g">☰ Halaman</button></header>
+<div id="pager"></div>
+<div id="grid"></div>
+<nav><button id="p">‹ Sebelumnya</button><span id="n"></span><button id="x">Berikutnya ›</button></nav>
+<script>
+const P=["pages/p01.jpg", "pages/p02.jpg", "pages/p03.jpg", "pages/p04.jpg", "pages/p05.jpg", "pages/p06.jpg", "pages/p07.jpg", "pages/p08.jpg", "pages/p09.jpg", "pages/p10.jpg", "pages/p11.jpg", "pages/p12.jpg", "pages/p13.jpg", "pages/p14.jpg", "pages/p15.jpg", "pages/p16.jpg", "pages/p17.jpg"];
+const pg=document.getElementById('pager'),gr=document.getElementById('grid'),n=document.getElementById('n');
+let cur=0;
+P.forEach((src,i)=>{const s=document.createElement('div');s.className='s';const im=new Image();im.src=src;im.loading=i<2?'eager':'lazy';im.alt='Halaman '+(i+1);s.appendChild(im);pg.appendChild(s);
+const t=document.createElement('div');t.innerHTML='<img src="'+src+'" loading="lazy"><span>'+(i+1)+'</span>';t.onclick=()=>{go(i);gr.classList.remove('on')};gr.appendChild(t)});
+function ui(){n.textContent=(cur+1)+' / '+P.length;[...gr.children].forEach((c,i)=>c.classList.toggle('cur',i==cur));try{localStorage.setItem('pg',cur)}catch(e){}}
+function go(i){cur=Math.max(0,Math.min(P.length-1,i));pg.scrollTo({left:cur*pg.clientWidth,behavior:'smooth'});ui()}
+pg.addEventListener('scroll',()=>{const i=Math.round(pg.scrollLeft/pg.clientWidth);if(i!=cur){cur=i;ui()}});
+document.getElementById('p').onclick=()=>go(cur-1);
+document.getElementById('x').onclick=()=>go(cur+1);
+document.getElementById('g').onclick=()=>gr.classList.toggle('on');
+addEventListener('keydown',e=>{if(e.key=='ArrowRight')go(cur+1);if(e.key=='ArrowLeft')go(cur-1)});
+let s0=0;try{s0=+localStorage.getItem('pg')||0}catch(e){}
+ui();setTimeout(()=>{pg.scrollLeft=s0*pg.clientWidth;cur=s0;ui()},50);
+</script></body></html>
